@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+
+# --- BTW-SUITE: RANK-MIRRORS ---
+# The most supremacist mirror ranking script in existence.
+# "I use Arch, btw."
+
+# Source the Chad Library
+LIB_PATH="$(dirname "$(realpath "$0")")/../lib/chad.sh"
+if [[ -f "$LIB_PATH" ]]; then
+    source "$LIB_PATH"
+else
+    echo "Error: Chad library not found at $LIB_PATH"
+    exit 1
+fi
+
+# --- CONFIGURATION ---
+MIRROR_DIR="/etc/pacman.d"
+ARCH_LIST="$MIRROR_DIR/mirrorlist"
+CACHY_LIST="$MIRROR_DIR/cachyos-mirrorlist"
+ARTIX_LIST="$MIRROR_DIR/artix-mirrorlist"
+
+# --- HELP FUNCTION ---
+show_help() {
+    chad_header
+    echo -e "${BOLD}USAGE:${RESET}"
+    echo -e "  sudo $0 [OPTIONS]"
+    echo ""
+    echo -e "${BOLD}OPTIONS:${RESET}"
+    echo -e "  --help        Show this Chad-tier help message"
+    echo -e "  --timer       Install and enable the systemd timer (Weekly Ascension)"
+    echo ""
+    echo -e "${BOLD}DESCRIPTION:${RESET}"
+    echo -e "  This script ranks mirrors for Arch, CachyOS, and Artix using ${CHAD_GOLD}rate-mirrors${RESET}."
+    echo -e "  It prioritizes ${CHAD_CYAN}Canada${RESET}, then ${CHAD_BLUE}US${RESET}, then ${CHAD_PURPLE}Worldwide${RESET}."
+    echo -e "  Optimized for throughput (large packages) with a weight on latency."
+    echo ""
+    power_level_check
+    exit 0
+}
+
+# --- CHECK FOR RATE-MIRRORS ---
+check_deps() {
+    if ! command -v rate-mirrors &> /dev/null; then
+        error_print "rate-mirrors is not installed. You are not yet a Chad."
+        chad_print "Install it with: ${CHAD_GOLD}yay -S rate-mirrors-bin${RESET} or ${CHAD_GOLD}sudo pacman -S rate-mirrors${RESET}"
+        exit 1
+    fi
+}
+
+# --- RANKING LOGIC ---
+rank_mirrors() {
+    local type=$1
+    local output_file=$2
+    
+    chad_print "Ascending mirrors for ${CHAD_GOLD}${type}${RESET}..."
+    
+    # We use --entry-country CA to start with Canada, then it naturally jumps to neighbors (US) and then worldwide.
+    # We use --concurrency 8 for moderate parallelism on this 2-core beast.
+    # We use --top-mirrors-number-to-retest 10 for better accuracy on throughput.
+    
+    local cmd="rate-mirrors --allow-root --concurrency 8 --entry-country CA --top-mirrors-number-to-retest 10 $type"
+    
+    if [[ "$EUID" -ne 0 ]]; then
+        error_print "This operation requires sudo. Chads have root access."
+        exit 1
+    fi
+
+    # Run the command and save to temp file first
+    local tmp_file=$(mktemp)
+    if eval "$cmd" > "$tmp_file"; then
+        mv "$tmp_file" "$output_file"
+        success_print "Mirrors for ${type} have been ranked and saved to ${output_file}."
+    else
+        error_print "Failed to rank mirrors for ${type}. Is your internet even over 9000?"
+        rm -f "$tmp_file"
+    fi
+}
+
+# --- SYSTEMD TIMER INSTALLATION ---
+install_timer() {
+    chad_print "Installing the Weekly Ascension Timer..."
+    
+    local service_src="$(dirname "$(realpath "$0")")/../systemd/btw-mirror-rank.service"
+    local timer_src="$(dirname "$(realpath "$0")")/../systemd/btw-mirror-rank.timer"
+    
+    if [[ ! -f "$service_src" || ! -f "$timer_src" ]]; then
+        error_print "Systemd unit files not found. Did you delete them, you non-Chad?"
+        exit 1
+    fi
+    
+    cp "$service_src" /etc/systemd/system/
+    cp "$timer_src" /etc/systemd/system/
+    
+    # Create symlink for the script
+    ln -sf "$(realpath "$0")" /usr/local/bin/btw-rank-mirrors
+    
+    systemctl daemon-reload
+    systemctl enable --now btw-mirror-rank.timer
+    
+    success_print "Weekly Ascension Timer is now active. Your mirrors will stay fresh forever."
+}
+
+# --- MAIN ---
+if [[ "$1" == "--help" ]]; then
+    show_help
+fi
+
+if [[ "$1" == "--timer" ]]; then
+    install_timer
+    exit 0
+fi
+
+check_deps
+chad_header
+
+# Rank Arch
+if [[ -f "$ARCH_LIST" ]]; then
+    rank_mirrors "arch" "$ARCH_LIST"
+fi
+
+# Rank CachyOS
+if [[ -f "$CACHY_LIST" ]]; then
+    rank_mirrors "cachyos" "$CACHY_LIST"
+fi
+
+# Rank Artix
+if [[ -f "$ARTIX_LIST" ]]; then
+    rank_mirrors "artix" "$ARTIX_LIST"
+fi
+
+chad_separator
+success_print "All mirrors have been ascended. You are now ready for peak performance."
+btw_print "Don't forget to run ${CHAD_GOLD}sudo pacman -Sy${RESET} to sync the new mirrors."

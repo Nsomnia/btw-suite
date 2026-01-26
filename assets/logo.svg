@@ -1,0 +1,7 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#0f0f0f"/>
+  <path d="M100 30L170 150H30L100 30Z" fill="none" stroke="#17a2b8" stroke-width="8"/>
+  <path d="M100 60L140 130H60L100 60Z" fill="#17a2b8"/>
+  <text x="100" y="180" font-family="monospace" font-size="20" fill="#17a2b8" text-anchor="middle" font-weight="bold">BTW-SUITE</text>
+  <text x="100" y="195" font-family="monospace" font-size="10" fill="#555" text-anchor="middle">I USE ARCH, BTW</text>
+</svg>

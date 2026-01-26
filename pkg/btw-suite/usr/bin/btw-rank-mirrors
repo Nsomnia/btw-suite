@@ -5,13 +5,11 @@
 # "I use Arch, btw."
 
 # Source the Chad Library
-# Check system path first (if installed via PKGBUILD), then local path
-if [[ -f "/usr/lib/btw-suite/chad.sh" ]]; then
-    source "/usr/lib/btw-suite/chad.sh"
-elif [[ -f "$(dirname "$(realpath "$0")")/../lib/chad.sh" ]]; then
-    source "$(dirname "$(realpath "$0")")/../lib/chad.sh"
+LIB_PATH="$(dirname "$(realpath "$0")")/../lib/chad.sh"
+if [[ -f "$LIB_PATH" ]]; then
+    source "$LIB_PATH"
 else
-    echo "Error: Chad library not found."
+    echo "Error: Chad library not found at $LIB_PATH"
     exit 1
 fi
 
@@ -35,8 +33,6 @@ show_help() {
     echo -e "  This script ranks mirrors for Arch, CachyOS, and Artix using ${CHAD_GOLD}rate-mirrors${RESET}."
     echo -e "  It prioritizes ${CHAD_CYAN}Canada${RESET}, then ${CHAD_BLUE}US${RESET}, then ${CHAD_PURPLE}Worldwide${RESET}."
     echo -e "  Optimized for throughput (large packages) with a weight on latency."
-    echo ""
-    stallman_interject
     echo ""
     power_level_check
     exit 0
